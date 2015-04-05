@@ -100,4 +100,15 @@ public class NeedBracesCheckTest extends BaseCheckTestSupport
         };
         verify(checkConfig, getPath("InputBracesSingleLineStatements.java"), expected);
     }
+
+    @Test
+    public void testSingleLineElseStatements() throws Exception {
+        final DefaultConfiguration checkConfig =
+                createCheckConfig(NeedBracesCheck.class);
+        checkConfig.addAttribute("allowSingleLineStatement", "true");
+        final String[] expected = {
+                "7: " + getCheckMessage(MSG_KEY_NEED_BRACES, "else"),
+        };
+        verify(checkConfig, getPath("InputBracesSingleLineElseStatements.java"), expected);
+    }
 }
