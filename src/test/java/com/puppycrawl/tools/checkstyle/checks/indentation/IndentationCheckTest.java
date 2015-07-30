@@ -761,6 +761,26 @@ public class IndentationCheckTest extends BaseCheckTestSupport {
     }
 
     @Test
+    public void testCommentsInArrayInitShouldNotChangeViolationMessage() throws Exception {
+        final DefaultConfiguration checkConfig = createCheckConfig(IndentationCheck.class);
+
+        checkConfig.addAttribute("arrayInitIndent", "4");
+        checkConfig.addAttribute("basicOffset", "4");
+        checkConfig.addAttribute("braceAdjustment", "0");
+        checkConfig.addAttribute("caseIndent", "4");
+        checkConfig.addAttribute("forceStrictCondition", "false");
+        checkConfig.addAttribute("lineWrappingIndentation", "4");
+        checkConfig.addAttribute("tabWidth", "4");
+        checkConfig.addAttribute("throwsIndent", "4");
+        final String fname = getPath("indentation/InputArrayInitCommentsShouldNotChangeViolationMessage.java");
+        final String[] expected = {
+            "19: " + getCheckMessage(MSG_CHILD_ERROR_MULTI, "array initialization", 11, "12, 24, 26"),
+            "24: " + getCheckMessage(MSG_CHILD_ERROR_MULTI, "array initialization", 11, "12, 24, 26"),
+        };
+        verify(checkConfig, fname, expected);
+    }
+
+    @Test
     public void testValidTryWithChecker()
         throws Exception {
         final DefaultConfiguration checkConfig = createCheckConfig(IndentationCheck.class);
