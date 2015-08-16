@@ -200,7 +200,7 @@ public class ParseTreeInfoPanel extends JPanel {
     }
 
     public List<Integer> getLinesToPosition() {
-        return Collections.unmodifiableList(linesToPosition);
+        return linesToPosition;
     }
 
     /**
