@@ -164,4 +164,18 @@ public class EmptyLineSeparatorCheckTest
         final String[] expected = ArrayUtils.EMPTY_STRING_ARRAY;
         verify(checkConfig, getPath("InputPrePreviousLineEmptiness.java"), expected);
     }
+
+    @Test
+    public void testNotAllowMultipleEmptyLinesPrecedingMemberComment() throws Exception {
+        final DefaultConfiguration checkConfig = createCheckConfig(EmptyLineSeparatorCheck.class);
+        checkConfig.addAttribute("allowMultipleEmptyLines", "false");
+        final String[] expected = {
+            "10: " + getCheckMessage(MSG_MULTIPLE_LINES, "METHOD_DEF"),
+            "15: " + getCheckMessage(MSG_MULTIPLE_LINES, "METHOD_DEF"),
+            "22: " + getCheckMessage(MSG_MULTIPLE_LINES, "METHOD_DEF"),
+            "28: " + getCheckMessage(MSG_MULTIPLE_LINES, "METHOD_DEF"),
+            "45: " + getCheckMessage(MSG_SHOULD_BE_SEPARATED, "METHOD_DEF"),
+        };
+        verify(checkConfig, getPath("InputNotAllowEmptyLinesBeforeMemberComment.java"), expected);
+    }
 }

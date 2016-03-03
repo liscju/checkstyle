@@ -19,6 +19,8 @@
 
 package com.puppycrawl.tools.checkstyle.checks.whitespace;
 
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
@@ -334,12 +336,13 @@ public class EmptyLineSeparatorCheck extends AbstractCheck {
      */
     private boolean isPrePreviousLineEmpty(DetailAST token) {
         boolean result = false;
-        final int lineNo = token.getLineNo();
-        // 3 is the number of the pre-previous line because the numbering starts from zero.
-        final int number = 3;
-        if (lineNo >= number) {
-            final String prePreviousLine = getLines()[lineNo - number];
-            result = prePreviousLine.trim().isEmpty();
+        final int previousLineNo = firstNotCommentLineBeforeLine(token.getLineNo());
+        if (previousLineNo >= 1) {
+            final int prePreviousLineNo = firstNotCommentLineBeforeLine(previousLineNo);
+            if (prePreviousLineNo >= 1) {
+                final String prePreviousLine = getLines()[prePreviousLineNo - 1];
+                result = prePreviousLine.trim().isEmpty();
+            }
         }
         return result;
     }
@@ -391,13 +394,64 @@ public class EmptyLineSeparatorCheck extends AbstractCheck {
      * @return true, if token have empty line before.
      */
     private boolean hasEmptyLineBefore(DetailAST token) {
+        boolean result = false;
         final int lineNo = token.getLineNo();
         if (lineNo == 1) {
             return false;
         }
-        //  [lineNo - 2] is the number of the previous line because the numbering starts from zero.
-        final String lineBefore = getLines()[lineNo - 2];
-        return lineBefore.trim().isEmpty();
+        int firstNotCommentLineBeforeToken = firstNotCommentLineBeforeLine(token.getLineNo());
+        if (firstNotCommentLineBeforeToken >= 1) {
+            final String lineBefore = getLines()[firstNotCommentLineBeforeToken - 1];
+            result = lineBefore.trim().isEmpty();
+        }
+
+        return result;
+    }
+
+    private int firstNotCommentLineBeforeLine(int line) {
+        // lineNo - 2 is the number of the previous line because the numbering starts from zero,
+        // so lineNo - 1 equals current position
+        int lineIndex = line - 2;
+        boolean insideComment = false;
+        while (lineIndex >= 0) {
+            if (singleCommentLine(lineIndex)) {
+                lineIndex--;
+            }
+            else if (endsMultilineComment(lineIndex)) {
+                insideComment = true;
+                lineIndex--;
+            }
+            else if (beginsMultilineComment(lineIndex)) {
+                insideComment = false;
+                lineIndex--;
+            }
+            else if (insideComment) {
+                lineIndex--;
+            }
+            else {
+                break;
+            }
+        }
+        // getLines() count numbers from 0, tokens from 1, so
+        // to return line number like in tokens we have to add 1
+        return lineIndex + 1;
+    }
+
+    private boolean singleCommentLine(int line) {
+        FileContents fileContents = getFileContents();
+        return fileContents.lineIsComment(line);
+    }
+
+    private boolean endsMultilineComment(int lineIndex) {
+        final String MATCH_END_OF_MULTILINE_COMMENT = "^.*\\*/\\s*$";
+        Pattern compile = Pattern.compile(MATCH_END_OF_MULTILINE_COMMENT);
+        return compile.matcher(getLines()[lineIndex]).matches();
+    }
+
+    private boolean beginsMultilineComment(int lineIndex) {
+        String MATCH_BEGINS_COMMENT_PAT = "^.*/\\*.*$";
+        Pattern compile = Pattern.compile(MATCH_BEGINS_COMMENT_PAT);
+        return compile.matcher(getLines()[lineIndex]).matches();
     }
 
     /**
